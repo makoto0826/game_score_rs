@@ -1,0 +1,4 @@
+player_id,handle_name
+A,AA
+B,BB
+C,CC
