@@ -57,19 +57,6 @@ pub struct RankingScore<'a> {
     pub inner: &'a Score,
 }
 
-pub fn output(ranking_scores: &Vec<RankingScore>, players: &HashMap<String, Player>) {
-    println!("rank,player_id,handle_name,mean_score");
-
-    for score in ranking_scores.iter() {
-        let player = players.get(&score.inner.player_id).unwrap();
-
-        println!(
-            "{},{},{},{}",
-            score.rank, score.inner.player_id, player.handle_name, score.inner.mean_score
-        );
-    }
-}
-
 ///
 /// プレイヤーファイルからプレイヤーを取得します。
 ///
@@ -85,7 +72,7 @@ pub fn get_players<P: AsRef<Path>>(player_path: P) -> Result<HashMap<String, Pla
 
     let mut reader = BufReader::new(file);
     let _ = reader.read_line(&mut String::new());
-    let mut kv_players: HashMap<String, Player> = HashMap::new();
+    let mut players: HashMap<String, Player> = HashMap::new();
 
     loop {
         let mut line = String::new();
@@ -102,7 +89,7 @@ pub fn get_players<P: AsRef<Path>>(player_path: P) -> Result<HashMap<String, Pla
                 let player_id = fields[0].to_string();
                 let handle_name = fields[1].to_string();
 
-                kv_players.insert(player_id.clone(), Player::new(player_id, handle_name));
+                players.insert(player_id.clone(), Player::new(player_id, handle_name));
             }
             Err(_) => {
                 return Err("スコアファイルの読み取りに失敗しました".to_string());
@@ -110,7 +97,7 @@ pub fn get_players<P: AsRef<Path>>(player_path: P) -> Result<HashMap<String, Pla
         }
     }
 
-    Ok(kv_players)
+    Ok(players)
 }
 
 ///
@@ -128,7 +115,7 @@ pub fn get_scores<P: AsRef<Path>>(score_path: P) -> Result<Vec<Score>, String> {
 
     let mut reader = BufReader::new(file);
     let _ = reader.read_line(&mut String::new());
-    let mut kv_scores: HashMap<String, Score> = HashMap::new();
+    let mut scores: HashMap<String, Score> = HashMap::new();
 
     loop {
         let mut line = String::new();
@@ -147,10 +134,10 @@ pub fn get_scores<P: AsRef<Path>>(score_path: P) -> Result<Vec<Score>, String> {
                     return Err("スコアがフォーマットが不正です".to_string());
                 };
 
-                match kv_scores.get_mut(&player_id) {
+                match scores.get_mut(&player_id) {
                     Some(score_info) => score_info.add(score),
                     None => {
-                        kv_scores.insert(player_id.clone(), Score::new(&player_id, score));
+                        scores.insert(player_id.clone(), Score::new(&player_id, score));
                     }
                 }
             }
@@ -160,11 +147,11 @@ pub fn get_scores<P: AsRef<Path>>(score_path: P) -> Result<Vec<Score>, String> {
         }
     }
 
-    for score in kv_scores.values_mut() {
+    for score in scores.values_mut() {
         score.average();
     }
 
-    Ok(kv_scores.into_values().collect())
+    Ok(scores.into_values().collect())
 }
 
 ///
@@ -190,6 +177,12 @@ pub fn sort(scores: &mut Vec<Score>) {
     });
 }
 
+///
+/// 平均したスコアから順位を付与します。
+///
+/// scores - スコア情報
+///
+/// limit - 順位を付与する上限
 ///
 pub fn rank(scores: &Vec<Score>, limit: u32) -> Vec<RankingScore> {
     let mut rank = 1;
@@ -220,4 +213,24 @@ pub fn rank(scores: &Vec<Score>, limit: u32) -> Vec<RankingScore> {
     }
 
     ranking_scores
+}
+
+///
+/// ランキングスコアを出力します。
+///
+/// ranking_scores - ランキングスコア
+///
+/// players - プレイヤー情報
+///
+pub fn output(ranking_scores: &Vec<RankingScore>, players: &HashMap<String, Player>) {
+    println!("rank,player_id,handle_name,mean_score");
+
+    for score in ranking_scores.iter() {
+        let player = players.get(&score.inner.player_id).unwrap();
+
+        println!(
+            "{},{},{},{}",
+            score.rank, score.inner.player_id, player.handle_name, score.inner.mean_score
+        );
+    }
 }
