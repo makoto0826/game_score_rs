@@ -1,4 +1,6 @@
 player_id,handle_name
-A,AA
-B,BB
-C,CC
+player0001,プレイヤー0001
+player0002,プレイヤー0002
+player0021,プレイヤー0021
+player0031,プレイヤー0031
+player0041,プレイヤー0041
